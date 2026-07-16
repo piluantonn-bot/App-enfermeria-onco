@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enfermería Mobile · Oncología — Prototipo</title>
+<style>
+  :root{
+    --navy:#132A52;
+    --navy-dark:#0C1D3B;
+    --maroon:#9C1F44;
+    --maroon-dark:#7A1836;
+    --teal:#1C8CA8;
+    --bg:#EEF0F4;
+    --card:#FFFFFF;
+    --ink:#1B2333;
+    --muted:#7C879B;
+    --muted-2:#A6AEBB;
+    --success:#1F8A50;
+    --success-bg:#E7F5EC;
+    --danger:#D14343;
+    --danger-bg:#FBEAEA;
+    --warning:#B9791A;
+    --warning-bg:#FBF1DF;
+    --disabled-bg:#EFF1F4;
+    --disabled-text:#B3BAC5;
+    --border:#E3E6ED;
+    --radius:14px;
+    --shadow: 0 1px 2px rgba(20,30,60,.06), 0 8px 24px -12px rgba(20,30,60,.18);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: radial-gradient(1200px 700px at 15% -10%, #E4EAF6 0%, var(--bg) 55%);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 60px;
+    color:var(--ink);
+  }
+  .lab{
+    text-align:center;
+    max-width:520px;
+    margin-bottom:18px;
+  }
+  .lab h1{
+    font-size:19px;
+    margin:0 0 4px;
+    letter-spacing:.2px;
+  }
+  .lab p{
+    font-size:12.5px;
+    color:var(--muted);
+    margin:0;
+    line-height:1.5;
+  }
+  .lab .tag{
+    display:inline-block;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.06em;
+    color:var(--maroon);
+    background:var(--danger-bg);
+    padding:3px 9px;
+    border-radius:999px;
+    margin-bottom:8px;
+    text-transform:uppercase;
+  }
+
+  .controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-bottom:20px;
+    max-width:400px;
+  }
+  .ctrl-btn{
+    font-size:11.5px;
+    font-weight:600;
+    padding:8px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--navy);
+    cursor:pointer;
+    transition:.15s;
+  }
+  .ctrl-btn.active{
+    background:var(--navy);
+    color:#fff;
+    border-color:var(--navy);
+  }
+  .ctrl-btn.reset{
+    color:var(--danger);
+  }
+  .ctrl-btn:hover{ filter:brightness(1.03); }
+
+  .frame-wrap{
+    position:relative;
+  }
+  .phone{
+    width:380px;
+    max-width:92vw;
+    height:790px;
+    background:#08111f;
+    border-radius:44px;
+    padding:14px;
+    box-shadow: 0 30px 60px -20px rgba(10,20,50,.45), 0 0 0 1px #08111f;
+  }
+  .screen{
+    width:100%;
+    height:100%;
+    background:var(--bg);
+    border-radius:30px;
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+  .notch{
+    position:absolute;
+    top:0; left:50%;
+    transform:translateX(-50%);
+    width:120px; height:22px;
+    background:#08111f;
+    border-radius:0 0 16px 16px;
+    z-index:50;
+  }
+  .statusbar{
+    height:26px;
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px;
+    font-size:11px;
+    font-weight:700;
+    color:#fff;
+    background:var(--navy-dark);
+  }
+  .app-body{
+    flex:1 1 auto;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    background:var(--bg);
+  }
+  .app-body::-webkit-scrollbar{width:0;}
+
+  /* Header bars */
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 16px 12px;
+    color:#fff;
+  }
+  .topbar.navy{ background:linear-gradient(180deg, var(--navy) 0%, #16345F 100%); }
+  .topbar.maroon{ background:linear-gradient(180deg, var(--maroon) 0%, var(--maroon-dark) 100%); }
+  .topbar .back{
+    width:28px;height:28px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.14);
+    font-size:16px;cursor:pointer;flex:0 0 auto;
+    user-select:none;
+  }
+  .topbar .back:hover{ background:rgba(255,255,255,.22); }
+  .topbar .title{
+    font-size:15.5px;
+    font-weight:700;
+    flex:1 1 auto;
+  }
+  .patient-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:2px 16px 14px;
+    color:#fff;
+  }
+  .avatar{
+    width:38px;height:38px;border-radius:50%;
+    background:rgba(255,255,255,.18);
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;font-weight:700;flex:0 0 auto;
+    border:1.5px solid rgba(255,255,255,.4);
+  }
+  .patient-meta{ flex:1 1 auto; min-width:0; }
+  .patient-meta .name{
+    font-size:14.5px; font-weight:700;
+    display:flex; align-items:center; gap:6px;
+  }
+  .patient-meta .name .check{
+    width:15px;height:15px;border-radius:50%;
+    background:#37C871;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:9px;color:#fff;flex:0 0 auto;
+  }
+  .patient-meta .sub{
+    font-size:11px;
+    opacity:.82;
+    margin-top:1px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .allergy-strip{
+    display:flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,.14);
+    color:#fff;
+    font-size:11px; font-weight:700;
+    padding:5px 16px;
+  }
+  .allergy-strip .dot{
+    width:16px;height:16px;border-radius:50%;
+    background:#fff; color:var(--maroon);
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px; font-weight:900;
+  }
+
+  /* Home cards */
+  .home-content{ padding:14px 14px 30px; }
+  .section-label{
+    font-size:11px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--muted); margin:16px 4px 8px;
+  }
+  .section-label:first-child{ margin-top:2px; }
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:14px 14px 13px;
+    margin-bottom:10px;
+    border:1px solid var(--border);
+  }
+  .card.disabled{
+    background:var(--disabled-bg);
+    box-shadow:none;
+    border:1px dashed #D7DBE3;
+  }
+  .card.clickable{ cursor:pointer; transition:.12s; }
+  .card.clickable:hover{ transform:translateY(-1px); box-shadow:0 4px 10px rgba(20,30,60,.1), 0 14px 30px -14px rgba(20,30,60,.22); }
+  .card-head{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:8px;
+  }
+  .card-title{
+    font-size:14px; font-weight:700; color:var(--ink);
+  }
+  .card.disabled .card-title{ color:var(--disabled-text); }
+  .card-sub{
+    font-size:11px; color:var(--muted); margin-top:1px;
+  }
+  .card.disabled .card-sub{ color:var(--disabled-text); }
+  .status-chip{
+    font-size:10px; font-weight:800; letter-spacing:.02em;
+    padding:4px 9px; border-radius:999px; white-space:nowrap; flex:0 0 auto;
+  }
+  .chip-indicado{ background:#EDE9FB; color:#5B3DBB; }
+  .chip-espera{ background:var(--warning-bg); color:var(--warning); }
+  .chip-recibido{ background:#E4EEFB; color:#1C5FA8; }
+  .chip-finalizado{ background:var(--success-bg); color:var(--success); }
+  .chip-off{ background:var(--disabled-bg); color:var(--disabled-text); }
+
+  .day-badge{
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:10.5px; font-weight:800; letter-spacing:.03em;
+    color:#fff; background:var(--maroon);
+    padding:4px 10px; border-radius:999px;
+    box-shadow:0 2px 6px rgba(156,31,68,.35);
+    white-space:nowrap;
+  }
+
+  .horarios-row{
+    display:flex; align-items:center; gap:9px; margin-top:10px; flex-wrap:wrap;
+  }
+  .horarios-row .clk{ font-size:13px; color:var(--muted); flex:0 0 auto; }
+  .hchip{
+    font-size:12px; font-weight:700; color:var(--ink);
+    padding:3px 4px;
+  }
+  .hchip.done{ color:var(--success); }
+  .hchip.next{
+    color:var(--teal);
+    border:1.5px solid var(--teal);
+    border-radius:7px; padding:2px 7px;
+  }
+  .hchip.muted{ color:var(--muted-2); }
+  .card.disabled .hchip{ color:var(--disabled-text); }
+
+  .card-foot{
+    margin-top:11px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .link-btn{
+    font-size:12px; font-weight:800; letter-spacing:.03em; color:var(--teal);
+    text-transform:uppercase;
+  }
+  .card.disabled .link-btn{ color:var(--disabled-text); }
+  .hint{ font-size:10.5px; color:var(--muted-2); font-style:italic; }
+
+  /* stepper */
+  .stepper-wrap{
+    background:var(--card);
+    margin:12px 14px 4px;
+    border-radius:var(--radius);
+    padding:14px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--border);
+  }
+  .stepper{
+    display:flex; align-items:center;
+  }
+  .step{
+    flex:1 1 auto; text-align:center; position:relative;
+  }
+  .step .circ{
+    width:26px;height:26px;border-radius:50%;
+    margin:0 auto 6px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px; font-weight:800;
+    background:var(--disabled-bg); color:var(--disabled-text);
+    border:2px solid var(--disabled-bg);
+  }
+  .step.done .circ{ background:var(--success); color:#fff; border-color:var(--success); }
+  .step.current .circ{ background:#fff; color:var(--teal); border-color:var(--teal); }
+  .step .lbl{
+    font-size:9.5px; font-weight:700; color:var(--muted-2); line-height:1.25;
+    padding:0 2px;
+  }
+  .step.done .lbl{ color:var(--success); }
+  .step.current .lbl{ color:var(--teal); }
+  .step-line{
+    position:absolute; top:13px; height:2px; background:var(--disabled-bg);
+    left:-50%; width:100%; z-index:0;
+  }
+  .step-line.done{ background:var(--success); }
+  .step:first-child .step-line{ display:none; }
+
+  .stepper-action{ margin-top:12px; }
+  .bar-action{
+    display:flex; align-items:center; justify-content:space-between;
+    width:100%; padding:13px 15px; border-radius:10px; box-sizing:border-box;
+    background:linear-gradient(180deg, var(--warning) 0%, #8F640F 100%);
+    color:#fff; font-size:13px; font-weight:800; letter-spacing:.02em;
+    cursor:pointer; transition:.12s; border:none;
+  }
+  .bar-action:hover{ filter:brightness(1.06); }
+  .bar-action .arrow{ font-size:15px; font-weight:900; }
+  .btn{
+    display:block; width:100%; text-align:center;
+    padding:11px; border-radius:10px; border:none;
+    font-size:13px; font-weight:800; letter-spacing:.02em;
+    cursor:pointer; transition:.12s;
+  }
+  .btn-primary{ background:var(--teal); color:#fff; }
+  .btn-primary:hover{ filter:brightness(1.06); }
+  .btn-success{ background:var(--success); color:#fff; }
+  .btn-success:hover{ filter:brightness(1.06); }
+  .btn-outline{ background:#fff; color:var(--ink); border:1.5px solid var(--border); }
+  .btn:disabled{ background:var(--disabled-bg); color:var(--disabled-text); cursor:not-allowed; }
+  .status-note{
+    font-size:11px; color:var(--muted); text-align:center; margin-top:9px; line-height:1.4;
+  }
+
+  /* day tabs */
+  .day-tabs{
+    display:flex; gap:6px; padding:12px 14px 4px; overflow-x:auto;
+  }
+  .day-tab{
+    flex:0 0 auto;
+    font-size:11.5px; font-weight:700;
+    padding:7px 12px; border-radius:9px;
+    background:#fff; color:var(--ink);
+    border:1.5px solid var(--border);
+    cursor:pointer; white-space:nowrap;
+    display:flex; align-items:center; gap:5px;
+  }
+  .day-tab.active{ background:var(--maroon); color:#fff; border-color:var(--maroon); }
+  .day-tab.locked{ color:var(--disabled-text); background:var(--disabled-bg); border-color:var(--disabled-bg); }
+  .day-tab .lock-ic{ font-size:9.5px; }
+
+  .protocol-name{
+    font-size:12px; color:var(--muted); padding:4px 16px 10px; line-height:1.4;
+  }
+  .protocol-name b{ color:var(--ink); }
+
+  .readonly-banner{
+    margin:0 14px 12px; padding:9px 11px;
+    background:#FDF4E3; border:1px solid #F0DDA9;
+    border-radius:10px; color:#8A6316;
+    font-size:11px; font-weight:600; line-height:1.4;
+    display:flex; gap:7px; align-items:flex-start;
+  }
+  .finalized-banner{
+    margin:0 14px 12px; padding:10px 11px;
+    background:var(--success-bg); border:1px solid #BEE6CC;
+    border-radius:10px; color:#166339;
+    font-size:11.5px; font-weight:700; line-height:1.4;
+    display:flex; gap:7px; align-items:flex-start;
+  }
+
+  .drugs-list{ padding:2px 14px 26px; display:flex; flex-direction:column; gap:10px; }
+
+  .drug-card{
+    background:#fff; border-radius:var(--radius); border:1px solid var(--border);
+    box-shadow:var(--shadow); padding:13px 13px 12px; position:relative; overflow:hidden;
+  }
+  .drug-card.locked{ background:var(--disabled-bg); box-shadow:none; }
+  .drug-card.readonly{ background:#fff; opacity:.62; }
+  .drug-card::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+    background:var(--disabled-bg);
+  }
+  .drug-card.state-si::before{ background:var(--success); }
+  .drug-card.state-no::before{ background:var(--danger); }
+  .drug-card.state-active::before{ background:var(--teal); }
+
+  .drug-top{ display:flex; justify-content:space-between; gap:10px; }
+  .drug-farmaco{ font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.03em; margin-bottom:3px;}
+  .drug-names{ font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.45; }
+  .drug-names .dose{ font-weight:600; color:var(--muted); font-size:12px; }
+  .drug-via{ text-align:right; flex:0 0 auto; }
+  .drug-via .vlbl{ font-size:10px; color:var(--muted); font-weight:700; text-transform:uppercase;}
+  .drug-via .vval{ font-size:11.5px; font-weight:800; color:var(--navy); }
+
+  .drug-meta-row{
+    display:flex; gap:18px; margin-top:9px;
+  }
+  .meta-item .mlbl{ font-size:9.5px; color:var(--muted); font-weight:700; text-transform:uppercase; }
+  .meta-item .mval{ font-size:12.5px; font-weight:700; color:var(--ink); margin-top:1px; }
+
+  .drug-horario{
+    margin-top:9px; display:flex; align-items:center; gap:6px;
+    font-size:12.5px; font-weight:700;
+  }
+  .drug-horario .hval{ color:var(--muted-2); }
+  .drug-horario.scheduled .hval{ color:var(--teal); }
+  .drug-horario.done .hval{ color:var(--success); }
+  .drug-horario.notgiven .hval{ color:var(--danger); }
+  .badge-seq{
+    font-size:9px; font-weight:800; color:#fff; background:var(--navy);
+    border-radius:5px; padding:1px 6px; letter-spacing:.03em;
+  }
+
+  .lock-note{
+    margin-top:9px; font-size:11px; color:var(--muted); font-weight:600;
+    display:flex; align-items:center; gap:5px;
+  }
+
+  .obs-note{
+    margin-top:8px; font-size:11.5px; background:var(--danger-bg); color:#93242A;
+    border-radius:8px; padding:7px 9px; line-height:1.4;
+  }
+
+  .barcode-row{
+    margin-top:11px; padding-top:10px; border-top:1px dashed var(--border);
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .barcode-box{ display:flex; align-items:center; gap:8px; }
+  .barcode-box svg{ display:block; }
+  .barcode-code{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:10px; color:var(--muted); }
+
+  .drug-actions{ display:flex; gap:7px; margin-top:11px; }
+  .action-btn{
+    flex:1 1 auto; font-size:11.5px; font-weight:800; padding:9px 8px;
+    border-radius:9px; border:1.5px solid var(--teal); background:#fff; color:var(--teal);
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .action-btn:hover{ background:#EAF6F9; }
+  .action-btn.menu{ flex:0 0 auto; width:36px; border-color:var(--border); color:var(--muted); }
+
+  /* two-dot menu (confirmación con cámara / manual) */
+  .drug-menu-wrap{ position:absolute; top:12px; right:12px; z-index:25; }
+  .drug-menu-btn{
+    width:26px; height:26px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    background:#F1F3F7; color:var(--muted); font-size:16px; font-weight:900;
+    cursor:pointer; line-height:1; border:1px solid var(--border);
+  }
+  .drug-menu-btn:hover{ background:#E7EAF0; }
+  .action-menu{
+    position:absolute; right:0; top:calc(100% + 6px); z-index:60;
+    background:#fff; border-radius:10px; box-shadow:var(--shadow); border:1px solid var(--border);
+    min-width:190px; overflow:hidden;
+  }
+  .action-menu-item{
+    padding:11px 13px; font-size:12px; font-weight:700; color:var(--ink);
+    display:flex; align-items:center; gap:8px; cursor:pointer; border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  .action-menu-item:last-child{ border-bottom:none; }
+  .action-menu-item:hover{ background:#F5F7FA; }
+  .action-menu-item .ic{ font-size:14px; }
+  .drug-menu-hint{
+    margin-top:9px; font-size:11px; color:var(--muted); font-weight:600;
+    display:flex; align-items:center; gap:5px;
+  }
+
+  /* floating scan FAB */
+  .fab-scan{
+    position:absolute; right:16px; bottom:16px; z-index:80;
+    width:56px; height:56px; border-radius:50%;
+    background:linear-gradient(180deg, var(--teal) 0%, #146981 100%);
+    color:#fff; display:none; flex-direction:column; align-items:center; justify-content:center;
+    box-shadow:0 10px 22px -8px rgba(20,30,60,.5), 0 2px 6px rgba(0,0,0,.3);
+    cursor:pointer; font-size:19px; border:2px solid rgba(255,255,255,.55);
+    transition:.15s;
+  }
+  .fab-scan:hover{ transform:translateY(-2px); }
+  .fab-scan .fab-lbl{ font-size:7.5px; font-weight:800; margin-top:1px; letter-spacing:.02em; }
+
+  .confirm-panel{
+    margin-top:11px; padding:11px; border-radius:10px;
+    background:#F7FAFC; border:1px solid var(--border);
+  }
+  .confirm-panel .q{ font-size:12px; font-weight:700; margin-bottom:9px; }
+  .yn-row{ display:flex; gap:8px; }
+  .yn-btn{
+    flex:1; padding:9px; border-radius:9px; font-size:12.5px; font-weight:800;
+    cursor:pointer; border:1.5px solid var(--border); background:#fff; color:var(--ink);
+  }
+  .yn-btn.si{ border-color:var(--success); color:var(--success); }
+  .yn-btn.si.picked{ background:var(--success); color:#fff; }
+  .yn-btn.no{ border-color:var(--danger); color:var(--danger); }
+  .yn-btn.no.picked{ background:var(--danger); color:#fff; }
+  .obs-field{
+    margin-top:9px;
+  }
+  .obs-field label{ font-size:10.5px; font-weight:700; color:var(--muted); display:block; margin-bottom:4px; }
+  .obs-field textarea{
+    width:100%; min-height:52px; border-radius:8px; border:1.5px solid var(--border);
+    padding:7px 9px; font-size:12px; font-family:inherit; resize:none; color:var(--ink);
+  }
+  .obs-field textarea.err{ border-color:var(--danger); }
+  .panel-save{
+    margin-top:9px;
+  }
+
+  .status-tag{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11px; font-weight:800; padding:4px 9px; border-radius:999px; margin-top:9px;
+  }
+  .status-tag.si{ background:var(--success-bg); color:var(--success); }
+  .status-tag.no{ background:var(--danger-bg); color:var(--danger); }
+
+  /* scan overlay */
+  .scan-overlay{
+    position:absolute; inset:0; background:rgba(8,17,31,.86);
+    display:flex; align-items:center; justify-content:center; z-index:100;
+    border-radius:30px;
+  }
+  .scan-card{
+    width:84%; background:#0F1E33; border-radius:16px; padding:22px 18px; text-align:center; color:#fff;
+  }
+  .scan-target{
+    width:100%; height:110px; border:2px dashed #3E5A82; border-radius:12px;
+    display:flex; align-items:center; justify-content:center; margin-bottom:14px; position:relative; overflow:hidden;
+  }
+  .scan-line{
+    position:absolute; left:8%; right:8%; height:2px; background:#39D98A;
+    box-shadow:0 0 8px #39D98A; animation: scanmove 1.1s ease-in-out infinite;
+  }
+  @keyframes scanmove{ 0%{top:10%;} 50%{top:85%;} 100%{top:10%;} }
+  .scan-card .lbl{ font-size:12.5px; color:#9FB0C9; margin-bottom:3px; }
+  .scan-card .drugname{ font-size:14px; font-weight:800; margin-bottom:14px; }
+  .scan-cancel{
+    font-size:11.5px; font-weight:700; color:#9FB0C9; cursor:pointer; margin-top:4px;
+  }
+
+  .toast{
+    position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
+    background:#1B2333; color:#fff; font-size:11.5px; font-weight:600;
+    padding:9px 16px; border-radius:999px; box-shadow:0 8px 20px rgba(0,0,0,.25);
+    z-index:200; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
+    white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(-4px); }
+
+  .footer-note{
+    max-width:520px; text-align:center; margin-top:18px; font-size:11px; color:var(--muted-2); line-height:1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="lab">
+  <div class="tag">Prototipo interactivo — no conectado a HCE real</div>
+  <h1>Enfermería Mobile · Administración de protocolos oncológicos</h1>
+  <p>Basado en el Manual de Enfermería Mobile 2026 v1 y el Requerimiento App Oncología (HIBA). Usá los controles de abajo para simular escenarios.</p>
+</div>
+
+<div class="controls">
+  <button class="ctrl-btn" id="btnScenA" onclick="setScenario(true)">Paciente CON protocolo oncológico</button>
+  <button class="ctrl-btn" id="btnScenB" onclick="setScenario(false)">Paciente SIN indicación oncológica</button>
+  <button class="ctrl-btn reset" onclick="resetDemo()">↺ Reiniciar demo</button>
+</div>
+
+<div class="frame-wrap">
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <div class="statusbar">
+        <span>09:41</span>
+        <span>Hospital Italiano · Enfermería Mobile</span>
+      </div>
+      <div class="app-body" id="appBody"></div>
+      <div class="fab-scan" id="fabScan" onclick="fabScanNext()" title="Escaneo general de fármacos (en el back se procesa de forma secuencial)">
+        <span>📷</span><span class="fab-lbl">ESCANEAR</span>
+      </div>
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-note">
+  Colores y componentes alineados a la guía visual actual (barra navy de navegación, barra bordó de "Administración").<br>
+  Estados del picking: <b>Indicado → Paciente en espera → Recibido por enfermería → Administración finalizada</b>.<br>
+  El paso "Recibido por enfermería" puede confirmarse manualmente o de forma automática al iniciar el primer escaneo.
+</div>
+
+<script>
+/* ---------------------------------------------------------
+   DATA MODEL
+--------------------------------------------------------- */
+function freshDrug(id, nombres, via, volumen, velocidad, intervalMin, seq){
+  return {
+    id, nombres, via, volumen, velocidad, intervalMin, seq,
+    status:'pendiente',   // pendiente | si | no
+    scheduled: seq===1 ? '--:--' : '--:--',
+    actualTime: null,
+    obs:'',
+    codigo: '78' + (91230000 + id*137).toString().slice(0,8),
+    panelOpen:false, pickedTemp:null,
+    menuOpen:false, confirmMethod:null   // confirmMethod: 'camara' | 'manual'
+  };
+}
+
+function buildProtocolData(){
+  return {
+    status:'indicado',         // indicado | espera | recibido | finalizado
+    finalizedAt:null,
+    currentDay:1,
+    totalDays:4,
+    name:'5-Fu (4 Días) + Cisplatino (2 Días) + Paclitaxel (1 Día)',
+    selectedDay:1,
+    days:{
+      1:[
+        freshDrug(1,[{n:'ondansetron',d:'8 mg'},{n:'dexametasona',d:'30 mg'}], 'INTRAVENOSA', '500 ml', '500 ml/hora', 60, 1),
+        freshDrug(2,[{n:'difenhidramina',d:'100 mg'},{n:'ranitidina',d:'300 mg'}], 'INTRAVENOSA', '500 ml', '500 ml/hora', 60, 2),
+        freshDrug(3,[{n:'paclitaxel',d:'100 mg'}], 'INTRAVENOSA', '500 ml', '500 ml/hora', 90, 3),
+        freshDrug(4,[{n:'5-fluorouracilo',d:'750 mg'}], 'INTRAVENOSA (BIC)', '250 ml', '10 ml/hora', 0, 4),
+      ],
+      2:[
+        freshDrug(5,[{n:'ondansetron',d:'8 mg'}], 'INTRAVENOSA', '100 ml', '300 ml/hora', 45, 1),
+        freshDrug(6,[{n:'cisplatino',d:'70 mg'}], 'INTRAVENOSA', '500 ml', '250 ml/hora', 0, 2),
+      ],
+      3:[
+        freshDrug(7,[{n:'5-fluorouracilo',d:'750 mg'}], 'INTRAVENOSA (BIC)', '250 ml', '10 ml/hora', 0, 1),
+      ],
+      4:[
+        freshDrug(8,[{n:'5-fluorouracilo',d:'750 mg'}], 'INTRAVENOSA (BIC)', '250 ml', '10 ml/hora', 0, 1),
+      ]
+    }
+  };
+}
+
+let state = {
+  screen:'home',            // home | protocol
+  hasOncology:true,
+  patient:{ name:'Alicia Balcarce', age:46, dob:'02-Mar-1968', episode:'H0998768', bed:'Sector 126 · Cama 04' },
+  protocol: buildProtocolData()
+};
+
+/* ---------------------------------------------------------
+   HELPERS
+--------------------------------------------------------- */
+function nowTimeStr(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function addMinutes(hhmm, min){
+  if(hhmm === '--:--') return '--:--';
+  const [h,m] = hhmm.split(':').map(Number);
+  const total = h*60+m+min;
+  const nh = Math.floor((total/60)%24), nm = total%60;
+  return String(nh).padStart(2,'0')+':'+String(nm).padStart(2,'0');
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 1700);
+}
+function svgBarcode(seedNum){
+  // deterministic pseudo-barcode bars
+  let bars = '';
+  let x = 2;
+  let seed = seedNum*97 + 13;
+  for(let i=0;i<22;i++){
+    seed = (seed*9301+49297) % 233280;
+    const w = 1 + (seed % 3);
+    const h = 26;
+    if(i%2===0){
+      bars += `<rect x="${x}" y="2" width="${w}" height="${h}" fill="#1B2333"/>`;
+    }
+    x += w + 1;
+  }
+  return `<svg width="${x+2}" height="30" viewBox="0 0 ${x+2} 30" xmlns="http://www.w3.org/2000/svg">${bars}</svg>`;
+}
+
+/* ---------------------------------------------------------
+   STATE ACTIONS
+--------------------------------------------------------- */
+function setScenario(hasOnco){
+  state.hasOncology = hasOnco;
+  document.getElementById('btnScenA').classList.toggle('active', hasOnco);
+  document.getElementById('btnScenB').classList.toggle('active', !hasOnco);
+  state.screen='home';
+  render();
+}
+function resetDemo(){
+  state.protocol = buildProtocolData();
+  state.screen='home';
+  render();
+  toast('Demo reiniciada');
+}
+function goHome(){ state.screen='home'; render(); }
+function goProtocol(){
+  if(!state.hasOncology) return;
+  state.screen='protocol'; render();
+}
+function markEspera(){
+  state.protocol.status='espera';
+  render();
+  toast('Paciente confirmado en espera — protocolo listo para ser recibido');
+}
+function markRecibido(){
+  state.protocol.status='recibido';
+  render();
+  toast('Protocolo marcado como "Recibido por enfermería"');
+}
+function autoConfirmRecibido(){
+  if(state.protocol.status==='espera'){
+    state.protocol.status='recibido';
+    toast('Recepción confirmada automáticamente al iniciar la administración');
+  }
+}
+function finalizeAdmin(){
+  state.protocol.status='finalizado';
+  state.protocol.finalizedAt = nowTimeStr();
+  render();
+  toast('Administración finalizada y registrada en HCE');
+}
+function selectDay(d){
+  state.protocol.selectedDay = d;
+  render();
+}
+function isUnlocked(dayArr, idx){
+  if(idx===0) return true;
+  return dayArr[idx-1].status !== 'pendiente';
+}
+function canActOnDrug(day, idx){
+  const p = state.protocol;
+  if(p.status !== 'espera' && p.status !== 'recibido') return false;
+  if(day !== p.currentDay) return false;
+  return isUnlocked(p.days[day], idx);
+}
+function togglePanel(day, idx, forceOpen){
+  const drug = state.protocol.days[day][idx];
+  drug.panelOpen = forceOpen!==undefined ? forceOpen : !drug.panelOpen;
+  drug.pickedTemp = null;
+  render();
+}
+function toggleDrugMenu(day, idx){
+  const drug = state.protocol.days[day][idx];
+  // close any other open menu first
+  Object.values(state.protocol.days).flat().forEach(d=>{ if(d!==drug) d.menuOpen=false; });
+  drug.menuOpen = !drug.menuOpen;
+  render();
+}
+function openManualConfirm(day, idx){
+  const drug = state.protocol.days[day][idx];
+  drug.menuOpen = false;
+  drug.confirmMethod = 'manual';
+  autoConfirmRecibido();
+  togglePanel(day, idx, true);
+}
+function pickYN(day, idx, val){
+  const drug = state.protocol.days[day][idx];
+  drug.pickedTemp = val;
+  render();
+}
+function saveConfirm(day, idx){
+  const drug = state.protocol.days[day][idx];
+  const ta = document.getElementById('obs-'+day+'-'+idx);
+  const obsVal = ta ? ta.value.trim() : '';
+  if(drug.pickedTemp === null){ toast('Seleccioná Sí o No'); return; }
+  if(drug.pickedTemp === false && obsVal.length===0){
+    if(ta){ ta.classList.add('err'); ta.focus(); }
+    toast('Las observaciones son obligatorias cuando la respuesta es "No"');
+    return;
+  }
+  drug.status = drug.pickedTemp ? 'si' : 'no';
+  drug.actualTime = drug.pickedTemp ? nowTimeStr() : null;
+  drug.obs = obsVal;
+  drug.panelOpen = false;
+  drug.confirmMethod = null;
+
+  // sequential scheduling for next drug
+  const arr = state.protocol.days[day];
+  const next = arr[idx+1];
+  if(next){
+    if(drug.status==='si' && drug.intervalMin>0){
+      next.scheduled = addMinutes(drug.actualTime, drug.intervalMin);
+    } else {
+      next.scheduled = '--:--';
+    }
+  }
+  render();
+  toast(drug.status==='si' ? 'Administración registrada' : 'Registrado como no administrado');
+}
+function openScan(day, idx){
+  const drug = state.protocol.days[day][idx];
+  drug.menuOpen = false;
+  autoConfirmRecibido();
+  state.scanning = {day, idx};
+  render();
+  setTimeout(()=>{
+    if(state.scanning && state.scanning.day===day && state.scanning.idx===idx){
+      state.scanning = null;
+      drug.confirmMethod = 'camara';
+      togglePanel(day, idx, true);
+    }
+  }, 1100);
+}
+function cancelScan(){ state.scanning = null; render(); }
+
+/* ---------------------------------------------------------
+   FLOATING SCAN BUTTON (escaneo general — en el back es secuencial)
+--------------------------------------------------------- */
+function nextActionableDrug(){
+  const p = state.protocol;
+  if(state.screen !== 'protocol') return null;
+  if(p.status!=='espera' && p.status!=='recibido') return null;
+  const dayArr = p.days[p.currentDay];
+  for(let i=0;i<dayArr.length;i++){
+    if(dayArr[i].status==='pendiente' && isUnlocked(dayArr,i)) return i;
+  }
+  return null;
+}
+function fabScanNext(){
+  const idx = nextActionableDrug();
+  if(idx===null){ toast('No hay fármacos pendientes de administrar'); return; }
+  state.protocol.selectedDay = state.protocol.currentDay;
+  openScan(state.protocol.currentDay, idx);
+}
+function updateFab(){
+  const fab = document.getElementById('fabScan');
+  if(!fab) return;
+  const showFab = nextActionableDrug()!==null && !state.scanning;
+  fab.style.display = showFab ? 'flex' : 'none';
+}
+
+/* ---------------------------------------------------------
+   RENDER: HOME
+--------------------------------------------------------- */
+function renderHome(){
+  const p = state.protocol;
+  const onco = state.hasOncology;
+
+  const statusChipMap = {
+    indicado:{cls:'chip-indicado', label:'Indicado'},
+    espera:{cls:'chip-espera', label:'Paciente en espera'},
+    recibido:{cls:'chip-recibido', label:'Recibido por enfermería'},
+    finalizado:{cls:'chip-finalizado', label:'Administración finalizada'}
+  };
+  const chip = onco ? statusChipMap[p.status] : {cls:'chip-off', label:'No habilitado'};
+
+  const day1 = p.days[1];
+  const horariosHTML = day1.map((d,i)=>{
+    let cls='muted', label=d.scheduled;
+    if(d.status==='si'){ cls='done'; label = d.actualTime; }
+    else if(d.status==='no'){ cls='muted'; label='--:--'; }
+    else if(d.scheduled!=='--:--'){ cls='next'; label=d.scheduled; }
+    return `<span class="hchip ${cls}">${label}</span>`;
+  }).join('');
+
+  document.getElementById('appBody').innerHTML = `
+    <div class="topbar navy">
+      <div class="back" onclick="toast('Menú (no incluido en el prototipo)')">≡</div>
+      <div class="title">Inicio</div>
+    </div>
+    <div class="patient-row" style="background:linear-gradient(180deg, var(--navy) 0%, #16345F 100%); padding-top:0; padding-bottom:14px;">
+      <div class="avatar">${state.patient.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
+      <div class="patient-meta">
+        <div class="name"><span class="check">✓</span>${state.patient.name}</div>
+        <div class="sub">${state.patient.bed} · ${state.patient.age} años · Ep. ${state.patient.episode}</div>
+      </div>
+    </div>
+
+    <div class="home-content">
+      <div class="section-label">Funcionalidades de enfermería</div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Administración</div>
+            <div class="card-sub">Horario de dosis (indicaciones estándar)</div>
+          </div>
+        </div>
+        <div class="horarios-row">
+          <span class="clk">🕒</span>
+          <span class="hchip done">08:00</span>
+          <span class="hchip next">12:00</span>
+          <span class="hchip muted">16:00</span>
+          <span class="hchip muted">18:00</span>
+        </div>
+        <div class="card-foot">
+          <span class="link-btn" onclick="toast('Fuera del alcance de este prototipo')">Ingresar</span>
+        </div>
+      </div>
+
+      <div class="card ${onco ? 'clickable' : 'disabled'}" ${onco ? 'onclick="goProtocol()"' : ''}>
+        <div class="card-head">
+          <div>
+            <div class="card-title">Administración de protocolos</div>
+            <div class="card-sub">${onco ? 'Horarios de dosis · ' + p.name : 'Sin indicación oncológica activa'}</div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+            <span class="status-chip ${chip.cls}">${chip.label}</span>
+            ${onco ? `<span class="day-badge">📅 Día ${p.currentDay}/${p.totalDays}</span>` : ''}
+          </div>
+        </div>
+        ${onco ? `
+        <div class="horarios-row">
+          <span class="clk">🕒</span>
+          ${horariosHTML}
+        </div>` : `
+        <div class="horarios-row">
+          <span class="clk" style="opacity:.4">🕒</span>
+          <span class="hchip" style="color:var(--disabled-text)">--:--</span>
+          <span class="hchip" style="color:var(--disabled-text)">--:--</span>
+          <span class="hchip" style="color:var(--disabled-text)">--:--</span>
+        </div>`}
+        <div class="card-foot">
+          ${onco
+            ? `<span class="link-btn">Ingresar</span><span class="hint">Día ${p.currentDay} de ${p.totalDays}</span>`
+            : `<span class="link-btn" style="color:var(--disabled-text)">Ingresar</span><span class="hint">Tarjeta griseada — no corresponde</span>`
+          }
+        </div>
+      </div>
+
+      <div class="section-label">Valoración</div>
+      <div class="card disabled" onclick="toast('Fuera del alcance de este prototipo')">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Alerta temprana · Dolor · Caídas · UPP</div>
+            <div class="card-sub">No incluido en este prototipo</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Signos vitales</div>
+      <div class="card disabled" onclick="toast('Fuera del alcance de este prototipo')">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Tensión, frecuencias, temperatura, SatO₂</div>
+            <div class="card-sub">No incluido en este prototipo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------------------------------------------------
+   RENDER: PROTOCOL SCREEN
+--------------------------------------------------------- */
+function stepClass(stepKey){
+  const order = ['indicado','espera','recibido','finalizado'];
+  const cur = order.indexOf(state.protocol.status);
+  const idx = order.indexOf(stepKey);
+  if(idx < cur) return 'done';
+  if(idx === cur) return 'current';
+  return '';
+}
+
+function renderStepper(){
+  const p = state.protocol;
+  const steps = [
+    {key:'indicado', label:'Indicado'},
+    {key:'espera', label:'Paciente en espera'},
+    {key:'recibido', label:'Recibido por enfermería'},
+    {key:'finalizado', label:'Administración finalizada'}
+  ];
+  const stepsHTML = steps.map((s,i)=>{
+    const cls = stepClass(s.key);
+    const icon = cls==='done' ? '✓' : (i+1);
+    return `
+      <div class="step ${cls}">
+        <div class="step-line ${cls==='done' || (cls==='current' && i>0) ? 'done' : ''}"></div>
+        <div class="circ">${icon}</div>
+        <div class="lbl">${s.label}</div>
+      </div>`;
+  }).join('');
+
+  let actionHTML = '';
+  if(p.status==='indicado'){
+    actionHTML = `<div class="bar-action" onclick="markEspera()"><span>Confirmar paciente en espera</span><span class="arrow">→</span></div>
+      <div class="status-note">El protocolo fue indicado por el médico tratante. Confirmá la llegada del paciente para habilitar la recepción por enfermería.</div>`;
+  } else if(p.status==='espera'){
+    actionHTML = `<button class="btn btn-primary" onclick="markRecibido()">Confirmar recibido por enfermería</button>
+      <div class="status-note">También podés iniciar directamente la administración (📷 escaneo o confirmación manual del primer fármaco): la recepción se confirmará automáticamente.</div>`;
+  } else if(p.status==='recibido'){
+    const dayDrugs = p.days[p.currentDay];
+    const allResolved = dayDrugs.every(d=>d.status!=='pendiente');
+    actionHTML = `<button class="btn btn-success" ${allResolved?'':'disabled'} onclick="finalizeAdmin()">Finalizar administración del Día ${p.currentDay}</button>
+      <div class="status-note">${allResolved ? 'Todos los fármacos del día fueron registrados. Podés finalizar.' : 'Registrá secuencialmente cada fármaco del Día '+p.currentDay+' para habilitar el cierre.'}</div>`;
+  } else {
+    actionHTML = `<div class="status-note" style="color:var(--success); font-weight:700;">✓ Administración finalizada a las ${p.finalizedAt} hs. Protocolo registrado en la HCE.</div>`;
+  }
+
+  return `
+    <div class="stepper-wrap">
+      <div class="stepper">${stepsHTML}</div>
+      <div class="stepper-action">${actionHTML}</div>
+    </div>
+  `;
+}
+
+function renderDayTabs(){
+  const p = state.protocol;
+  let html = '';
+  for(let d=1; d<=p.totalDays; d++){
+    const isCurrent = d===p.currentDay;
+    const isSelected = d===p.selectedDay;
+    const locked = !isCurrent;
+    html += `<div class="day-tab ${isSelected?'active':''} ${locked?'locked':''}" onclick="selectDay(${d})">
+      Día ${d} ${locked ? '<span class="lock-ic">🔒</span>' : ''}
+    </div>`;
+  }
+  return `<div class="day-tabs">${html}</div>`;
+}
+
+function renderDrugCard(day, idx, drug, readOnlyDay){
+  const p = state.protocol;
+  const unlocked = isUnlocked(p.days[day], idx);
+  const actionable = canActOnDrug(day, idx) && !readOnlyDay;
+  const locked = !unlocked && !readOnlyDay;
+
+  let stateCls = 'state-pend';
+  if(drug.status==='si') stateCls='state-si';
+  else if(drug.status==='no') stateCls='state-no';
+  else if(actionable && unlocked) stateCls='state-active';
+
+  const namesHTML = drug.nombres.map(n=>`${n.n} <span class="dose">${n.d}</span>`).join(' + ');
+
+  let horarioCls='scheduled', horarioLabel=drug.scheduled;
+  if(drug.status==='si'){ horarioCls='done'; horarioLabel=drug.actualTime+' hs'; }
+  else if(drug.status==='no'){ horarioCls='notgiven'; horarioLabel='no administrado'; }
+  else if(drug.scheduled==='--:--'){ horarioCls=''; horarioLabel='--:--'; }
+  else { horarioLabel = drug.scheduled+' hs (sugerido)'; }
+
+  let bodyExtra = '';
+
+  if(readOnlyDay){
+    bodyExtra = `<div class="lock-note">🔒 Día de solo lectura — la administración solo puede registrarse el día correspondiente del protocolo.</div>`;
+  } else if(locked){
+    bodyExtra = `<div class="lock-note">🔒 Disponible tras confirmar la administración del fármaco anterior.</div>`;
+  } else if(drug.status !== 'pendiente'){
+    bodyExtra = `<div class="status-tag ${drug.status}">${drug.status==='si' ? '✓ Administrado a las '+drug.actualTime+' hs' : '✕ No administrado'}</div>`;
+    if(drug.status==='no' && drug.obs){
+      bodyExtra += `<div class="obs-note"><b>Observaciones:</b> ${drug.obs}</div>`;
+    }
+  } else if(actionable){
+    if(drug.panelOpen){
+      const si = drug.pickedTemp===true, no = drug.pickedTemp===false;
+      const methodLbl = drug.confirmMethod==='camara' ? '📷 vía cámara' : (drug.confirmMethod==='manual' ? '✎ manual' : '');
+      bodyExtra = `
+        <div class="confirm-panel">
+          <div class="q">¿Fue administrado? ${methodLbl ? `<span style="font-weight:600;color:var(--muted);font-size:10.5px;">(${methodLbl})</span>` : ''}</div>
+          <div class="yn-row">
+            <div class="yn-btn si ${si?'picked':''}" onclick="pickYN(${day},${idx},true)">✓ Sí</div>
+            <div class="yn-btn no ${no?'picked':''}" onclick="pickYN(${day},${idx},false)">✕ No</div>
+          </div>
+          ${drug.pickedTemp!==null ? `
+          <div class="obs-field">
+            <label>Observaciones ${no ? '(obligatorio)' : '(opcional)'}</label>
+            <textarea id="obs-${day}-${idx}" placeholder="${no ? 'Ej: paciente en estudio, se niega, etc.' : 'Ej: buena tolerancia, sin novedades, etc.'}">${drug.obs||''}</textarea>
+          </div>` : ''}
+          <div class="panel-save">
+            <button class="btn btn-primary" onclick="saveConfirm(${day},${idx})">Guardar</button>
+          </div>
+        </div>
+      `;
+    } else {
+      bodyExtra = `<div class="drug-menu-hint">⋮ Tocá el menú para confirmar la administración</div>`;
+    }
+  }
+
+  const scanOverlay = (state.scanning && state.scanning.day===day && state.scanning.idx===idx) ? `
+    <div class="scan-overlay" style="border-radius:14px;">
+      <div class="scan-card" style="width:90%;">
+        <div class="scan-target"><div class="scan-line"></div>▤▥</div>
+        <div class="lbl">Escaneando código de barras…</div>
+        <div class="drugname">${drug.nombres.map(n=>n.n).join(' + ')}</div>
+        <div class="scan-cancel" onclick="cancelScan()">Cancelar</div>
+      </div>
+    </div>` : '';
+
+  const menuHTML = (actionable && unlocked && drug.status==='pendiente' && !drug.panelOpen) ? `
+    <div class="drug-menu-wrap">
+      <div class="drug-menu-btn" onclick="toggleDrugMenu(${day},${idx})">⋮</div>
+      ${drug.menuOpen ? `
+      <div class="action-menu">
+        <div class="action-menu-item" onclick="openScan(${day},${idx})"><span class="ic">📷</span> Confirmación con cámara</div>
+        <div class="action-menu-item" onclick="openManualConfirm(${day},${idx})"><span class="ic">✎</span> Confirmación manual</div>
+      </div>` : ''}
+    </div>` : '';
+
+  return `
+    <div class="drug-card ${stateCls} ${locked?'locked':''} ${readOnlyDay?'readonly':''}" style="position:relative;">
+      ${scanOverlay}
+      ${menuHTML}
+      <div class="drug-top" style="${menuHTML ? 'padding-right:30px;' : ''}">
+        <div>
+          <div class="drug-farmaco">Fármaco <span class="badge-seq">SEC. ${drug.seq}</span></div>
+          <div class="drug-names">${namesHTML}</div>
+        </div>
+        <div class="drug-via">
+          <div class="vlbl">Vía</div>
+          <div class="vval">${drug.via}</div>
+        </div>
+      </div>
+      <div class="drug-meta-row">
+        <div class="meta-item"><div class="mlbl">Volumen</div><div class="mval">${drug.volumen}</div></div>
+        <div class="meta-item"><div class="mlbl">Velocidad</div><div class="mval">${drug.velocidad}</div></div>
+      </div>
+      <div class="drug-horario ${horarioCls}">
+        <span>🕒</span><span class="hval">${horarioLabel}</span>
+      </div>
+      ${bodyExtra}
+      <div class="barcode-row">
+        <div class="barcode-box">
+          ${svgBarcode(drug.id)}
+        </div>
+        <div class="barcode-code">COD ${drug.codigo}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderProtocol(){
+  const p = state.protocol;
+  const selDay = p.selectedDay;
+  const readOnlyDay = selDay !== p.currentDay;
+  const dayDrugs = p.days[selDay] || [];
+  const dayTitle = selDay===p.currentDay ? `Día ${selDay} · en curso` : `Día ${selDay}`;
+
+  let banner = '';
+  if(p.status==='finalizado'){
+    banner = `<div class="finalized-banner">✓ Administración finalizada — registrada a las ${p.finalizedAt} hs. Todas las tarjetas quedan de solo lectura.</div>`;
+  } else if(p.status==='espera' && !readOnlyDay){
+    banner = `<div class="readonly-banner" style="background:#EAF6FB;border-color:#BFE3EF;color:#155A73;">🕓 Paciente en espera. Al escanear (📷) o confirmar manualmente (✎) el primer fármaco, la recepción por enfermería se confirma automáticamente.</div>`;
+  } else if(readOnlyDay){
+    banner = `<div class="readonly-banner">🔒 Estás viendo el Día ${selDay} en modo lectura. Solo se permite ejecutar acciones de administración dentro del Día ${p.currentDay} (día vigente del protocolo).</div>`;
+  }
+
+  document.getElementById('appBody').innerHTML = `
+    <div class="topbar maroon">
+      <div class="back" onclick="goHome()">←</div>
+      <div class="title">Administración de protocolos</div>
+    </div>
+    <div class="patient-row" style="background:linear-gradient(180deg, var(--maroon) 0%, var(--maroon-dark) 100%); padding-top:0; padding-bottom:10px;">
+      <div class="avatar">${state.patient.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
+      <div class="patient-meta">
+        <div class="name"><span class="check">✓</span>${state.patient.name}</div>
+        <div class="sub">${state.patient.age} años · ${state.patient.dob} · Ep. ${state.patient.episode}</div>
+      </div>
+    </div>
+
+    ${renderStepper()}
+
+    <div class="protocol-name"><b>${dayTitle}</b> — ${p.name}</div>
+    ${renderDayTabs()}
+    ${banner}
+
+    <div class="drugs-list">
+      ${p.status==='indicado'
+        ? `<div class="readonly-banner">📋 El protocolo fue indicado por el médico tratante. Confirmá "Paciente en espera" arriba para habilitar la recepción y el registro de administración.</div>`
+        : dayDrugs.map((d,i)=>renderDrugCard(selDay, i, d, readOnlyDay || p.status==='finalizado')).join('')
+      }
+    </div>
+  `;
+}
+
+/* ---------------------------------------------------------
+   MAIN RENDER
+--------------------------------------------------------- */
+function render(){
+  if(state.screen==='home') renderHome();
+  else renderProtocol();
+  updateFab();
+}
+
+// init
+document.getElementById('btnScenA').classList.add('active');
+render();
+</script>
+</body>
+</html>
